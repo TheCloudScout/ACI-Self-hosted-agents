@@ -1,20 +1,16 @@
-# Instructie Azure DevOps Self Hosted Agent Container Instance
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# Introduction to Azure DevOps Self Hosted Agents running inside an Azure Container Instance
+Running your Azure DevOps self-hosted agent in a Azure Container Instance. Contains serveral dockerfile examples for Windows and Linux container agents as well as all the necessary YAML pipelines and ARM templates.
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+1.	Clone this repository.
+2.	Import the YAML pipelines.
+3.  Generate an Azure DevOps PAT with the folowing permissions: Agent Pools (Read & Manage), Deployment Groups (Read & Manage)
+4.  Create an agent pool in Azure DevOps to put your self-hosted agent container inside.	
+5.  Alter the variables inside the "infrastructure" pipelines.
+6.  Run the "infrastructure" pipeline for the first time.
+7.  Store PAT token in newly created Azure Key Vault.
+8.  Choose which "container" pipeline you want to start using and alter the variables inside.
+9.  Alter the ARM template paramters file so that the Key Vault references matches up. 
+10. Run the "container" pipeline for the first time.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
-
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
-
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+For more information see the blog article I've wrote about this.
