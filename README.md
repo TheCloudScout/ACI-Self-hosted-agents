@@ -10,7 +10,7 @@ Running your Azure DevOps self-hosted agent in a Azure Container Instance. Conta
 6.  Run the "infrastructure" pipeline for the first time.
 7.  Store PAT token in newly created Azure Key Vault.
 8.  Choose which "container" pipeline you want to start using and alter the variables inside.
-9.  Alter the ARM template paramters file so that the Key Vault references matches up. 
+9.  Alter the ARM template parameters file so that the Key Vault references matches up. 
 10. Run the "container" pipeline for the first time.
 
 For more information see the blog article I've wrote about this.
