@@ -1,0 +1,39 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerInstanceName": {
+      "value": "linuxagent"
+    },
+    "containerCount": {
+      "value": 1
+    },
+    "azdUrl": {
+      "value": ""
+    },
+    "patToken": {
+      "value": ""
+    },
+    "agentPool": {
+      "value": ""
+    },
+    "agentNamePrefix": {
+      "value": "aci-agent-linux-dotnet-"
+    },
+    "registryLoginServer": {
+      "value": ""
+    },
+    "registryImageUri": {
+      "value": ""
+    },
+    "registryUserName": {
+      "value": ""
+    },
+    "registryPassword": {
+      "value": ""
+    },
+    "osType": {
+      "value": "Linux"
+    }
+  }
+}

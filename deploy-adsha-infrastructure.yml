@@ -4,8 +4,17 @@ trigger: none
 # And specifically a Windows agent because we'l be relying of passing on environment variables to Powershell.
 pool: 'Hosted VS2017'
 
+# Only change and fill in the parameters below:
 variables:
-  KeyVaultName: 'keyvault-btoitops-adsha'
+  KeyVaultName: '<KEY VAULT NAME>'
+  AzureDevOpsServiceEndpoint: '<NAME OF AZURE DEVOPS SERVICE ENDPOINT FOR AZURE DEPLOYMENT>'
+  subscriptionId: '<SUBSCRIPTION ID>'
+  resourceGroupName: '<RESOURCE GROUP TO DEPLOY TO>'
+  location: '<AZURE REGION>'
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# =-=                                               DON't CHANGE ANYTHING BELOW THIS LINE!!                                                     =-=
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 jobs:
 - job: DeployInfra
@@ -16,11 +25,11 @@ jobs:
     displayName: 'Azure Deployment: Key Vault'
     inputs:
       deploymentScope: 'Resource Group'
-      ConnectedServiceName: 'DevOpsTeam-App-S'
-      subscriptionName: '7b1ba02e-bac6-4c45-83a0-7f0d3104922e'
+      ConnectedServiceName: $(AzureDevOpsServiceEndpoint)
+      subscriptionName: $(subscriptionId)
       action: 'Create Or Update Resource Group'
-      resourceGroupName: 'rg-devopsteam-app-sb-401'
-      location: 'West Europe'
+      resourceGroupName: $(resourceGroupName)
+      location: $(location)
       templateLocation: 'Linked artifact'
       csmFile: 'key-vault/key-vault-template.json'
       csmParametersFile: 'key-vault/key-vault-parameters.json'
@@ -31,10 +40,10 @@ jobs:
   - task: AzureResourceGroupDeployment@2
     displayName: 'Azure Deployment: Container Registry'
     inputs:
-      azureSubscription: 'DevOpsTeam-App-S'
+      azureSubscription: $(AzureDevOpsServiceEndpoint)
       action: 'Create Or Update Resource Group'
-      resourceGroupName: 'rg-devopsteam-app-sb-401'
-      location: 'West Europe'
+      resourceGroupName: $(resourceGroupName)
+      location: $(location)
       templateLocation: 'Linked artifact'
       csmFile: 'container-registry/container-registry-template.json'
       csmParametersFile: 'container-registry/container-registry-parameters.json'
@@ -44,7 +53,7 @@ jobs:
   - task: AzurePowerShell@4
     displayName: 'Azure Deployment: Store registry credentials in Key Vault'
     inputs:
-      azureSubscription: 'DevOpsTeam-App-S'
+      azureSubscription: $(AzureDevOpsServiceEndpoint)
       ScriptType: 'FilePath'
       ScriptPath: 'powershell-scripts/ContainerRegistryKeyVaultPasswords.ps1'
       ScriptArguments: '-KeyVaultName $(KeyVaultName)'

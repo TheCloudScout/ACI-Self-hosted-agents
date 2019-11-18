@@ -1,0 +1,171 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerInstanceName": {
+      "type": "string",
+      "metadata": {
+        "description": "Specifies the name of the Container Instance"
+      }
+    },
+    "containerCount": {
+      "type": "int",
+      "minValue": 1,
+      "defaultValue": 1,
+      "metadata": {
+        "description": "Specifies the amount of containers to deploy to the Container Instance. (for Windows the maximum is 1. You cannot update the count after deployment)"
+      }
+    },
+    "patToken": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The personal access token used by the agent(s) to connect to Azure DevOps"
+      }
+    },
+    "azdUrl": {
+      "type": "string",
+      "metadata": {
+        "description": "The url of the Azure DevOps project (https://dev.azure.com/<projectName>)"
+      }
+    },
+    "agentPool": {
+      "type": "string",
+      "metadata": {
+        "description": "The pool in which the agent(s) should join"
+      }
+    },
+    "agentNamePrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The name prefix for the agent(s) (e.g. aci-agent-ubuntu- will result in aci-agent-ubuntu-1 for the first container and so on)"
+      }
+    },
+    "registryLoginServer": {
+      "type": "string",
+      "metadata": {
+        "description": "The Container Registry login url (e.g. <name>.azurecr.io) where the image will be pulled from"
+      }
+    },
+    "registryUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "The Container Registry UserName"
+      }
+    },
+    "registryPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The Container Registry Password"
+      }
+    },
+    "registryImageUri": {
+      "type": "string",
+      "metadata": {
+        "description": "The Container Image Uri (e.g. <registryName>.azurecr.io/<libraryName>/<imageName>:<imageTag>)"
+      }
+    },
+    "memoryInGb": {
+      "type": "string",
+      "defaultValue": "3.5",
+      "metadata": {
+        "description": "The amount of memory to assign to the container(s)"
+      }
+    },
+    "cpuCount": {
+      "type": "string",
+      "defaultValue": "2",
+      "metadata": {
+        "description": "The amount of CPU(s) to assign to the container(s)"
+      }
+    },
+    "osType": {
+      "type": "string",
+      "defaultValue": "Linux",
+      "metadata": {
+        "description": "The OSType of the container(s) correlating to the image being pulled"
+      }
+    },
+    "restartPolicy": {
+      "type": "string",
+      "defaultValue": "Always",
+      "metadata": {
+        "description": "The restart policy for a container (Always, OnFailure, Never)"
+      }
+    },
+    "assignManagedIdentity": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Specify if a Managed Identity should be assigned"
+      }
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2018-10-01",
+      "name": "[parameters('containerInstanceName')]",
+      "location": "[resourceGroup().location]",
+      "identity": "[if(parameters('assignManagedIdentity'), json('{\"type\": \"SystemAssigned\"}'), json('null'))]",
+      "properties": {
+        "copy": [
+          {
+            "name": "containers",
+            "count": "[if(equals(parameters('osType'), 'Windows'), 1, parameters('containerCount'))]",
+            "input": {
+              "name": "[concat(parameters('agentNamePrefix'), padLeft(copyIndex('containers', 1), 3, '0'))]",
+              "properties": {
+                "image": "[parameters('registryImageUri')]",
+                "environmentVariables": [
+                  {
+                    "name": "VSTS_AGENT_INPUT_URL",
+                    "value": "[parameters('azdUrl')]"
+                  },
+                  {
+                    "name": "VSTS_AGENT_INPUT_AUTH",
+                    "value": "pat"
+                  },
+                  {
+                    "name": "VSTS_AGENT_INPUT_TOKEN",
+                    "secureValue": "[parameters('patToken')]"
+                  },
+                  {
+                    "name": "VSTS_AGENT_INPUT_POOL",
+                    "value": "[parameters('agentPool')]"
+                  },
+                  {
+                    "name": "VSTS_AGENT_INPUT_AGENT",
+                    "value": "[concat(parameters('agentNamePrefix'), padLeft(copyIndex('containers', 1), 3, '0'))]"
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "memoryInGB": "[parameters('memoryInGb')]",
+                    "cpu": "[parameters('cpuCount')]"
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "imageRegistryCredentials": [
+          {
+            "server": "[parameters('registryLoginServer')]",
+            "username": "[parameters('registryUserName')]",
+            "password": "[parameters('registryPassword')]"
+          }
+        ],
+        "restartPolicy": "[parameters('restartPolicy')]",
+        "osType": "[parameters('osType')]"
+      }
+    }
+  ],
+  "outputs": {
+    "principalId": {
+      "condition": "[parameters('assignManagedIdentity')]",
+      "type": "string",
+      "value": "[reference(concat(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('containerInstanceName')), '/providers/Microsoft.ManagedIdentity/Identities/default'), '2015-08-31-preview').principalId]"
+    }
+  }
+}

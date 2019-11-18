@@ -1,0 +1,54 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerInstanceName": {
+      "value": "vstsagent"
+    },
+    "containerCount": {
+      "value": 1
+    },
+    "azdUrl": {
+      "value": "https://dev.azure.com/<ORGANIZATION NAME>/"
+    },
+    "patToken": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
+        },
+        "secretName": "AzureDevOps-PATtoken"
+      }
+    },
+    "agentPool": {
+      "value": "Self-hosted-ACI-Windows-dotNet"
+    },
+    "agentNamePrefix": {
+      "value": "aci-agent-windows-dotnet-"
+    },
+    "registryLoginServer": {
+      "value": ""
+    },
+    "registryImageUri": {
+      "value": ""
+    },
+    "registryUserName": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
+        },
+        "secretName": "ACR-username"
+      }
+    },
+    "registryPassword": {
+      "reference": {
+        "keyVault": {
+          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
+        },
+        "secretName": "ACR-password"
+      }
+    },
+    "osType": {
+      "value": "Windows"
+    }
+  }
+}

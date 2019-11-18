@@ -1,0 +1,38 @@
+# escape=`
+
+FROM mcr.microsoft.com/powershell:6.2.0-ubuntu-18.04
+
+# Set default directory to C:\Agent
+WORKDIR /agent
+
+# Set PowerShell as default shell
+SHELL [ "pwsh", "-NoProfile", "-Command" ]
+
+# Install VSTS/DevOps self-hosted Agent
+ARG agentversion=2.155.1
+ENV agentversion=${agentversion}
+ENV AGENT_ALLOW_RUNASROOT 1
+RUN $ProgressPreference = 'SilentlyContinue' ; `
+    Invoke-WebRequest -Uri "https://vstsagentpackage.azureedge.net/agent/$env:agentversion/vsts-agent-linux-x64-$env:agentversion.tar.gz" -OutFile "./vsts-agent-linux-x64-$env:agentversion.tar.gz" -UseBasicParsing ; `
+    tar  zxvf "./vsts-agent-linux-x64-$env:agentversion.tar.gz" ; `
+    rm "./vsts-agent-linux-x64-$env:agentversion.tar.gz" ; `
+    ./bin/installdependencies.sh
+
+# Install PS Modules in C:\Modules
+RUN Install-Module Az -Force -Scope AllUsers ; `
+    Install-Module Pester -Force -Scope AllUsers ; `
+    Install-Module PSScriptAnalyzer -Force -Scope AllUsers
+
+# Install .NET Core SDK
+RUN Invoke-WebRequest -Uri https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -OutFile ./packages-microsoft-prod.deb -UseBasicParsing ; `
+    dpkg -i ./packages-microsoft-prod.deb ; `
+    rm ./packages-microsoft-prod.deb
+
+# Install some other packages
+RUN apt install git -y ; `
+    apt-get install apt-transport-https -y ; `
+    apt-get update ; `
+    apt-get install dotnet-sdk-2.2 -y ; `
+    apt-get install zip -y
+
+ENTRYPOINT [ "/bin/bash", "-c", "./config.sh --unattended --replace && ./run.sh" ]

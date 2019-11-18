@@ -1,0 +1,1 @@
+Invoke-AzResourceAction -ResourceGroupName $ENV:ResourceGroupName -ResourceName $ENV:ResourceName -Action Start -ResourceType Microsoft.ContainerInstance/containerGroups -Force

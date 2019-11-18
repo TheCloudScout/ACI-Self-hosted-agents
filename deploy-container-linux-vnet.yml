@@ -1,0 +1,73 @@
+trigger: none
+
+# We need to rely on a hosted agent from Microsoft to build and deploy our container agent for the first time.
+# Please note that we'll be needing a Windows/Linux agent to match the corrosponding container image source. Otherwise the build will fail.
+pool:
+  vmImage: 'ubuntu-latest'
+
+# Only change and fill in the parameters below:
+variables:
+  # URL to your Azure DevOps Organization and name of the agent pool. You'll need to create the agent pool yourself first.
+  azdUrl: 'https://dev.azure.com/<ORGANIZATION NAME>/'
+  agentPool: 'Self-hosted-ACI-Linux-dotNet'
+  # Name of Key Vault where secrets are stored for the Azure Container Registry credentials and its proper URL.
+  azureSubscription: '<NAME OF AZURE DEVOPS SERVICE ENDPOINT FOR AZURE DEPLOYMENT>'
+  resourceGroupName: '<RESOURCE GROUP TO DEPLOY TO>'
+  keyVaultName: '<KEY VAULT NAME>'
+  registryUsername: '<NAME OF AZURE CONTAINER REGISTRY>'
+  registryLoginServer: '<URL OF ACR i.e. adsharegistry.azurecr.io>'
+  registryImageUri: '$(registryLoginServer)/$(containerRepository):$(Build.BuildId)'
+  # Name of the Azure Container Instance name.
+  containerInstanceName: 'linuxagent'
+  # Name of the repository in which to store the container image inside the Azure Container Registry.
+  containerRepository: 'adsha-ubuntulinux'
+  # Provide the name of your vNet and subnet to which the Azure Container Instance and thus the container agent should be linked.
+  # The subnet cannot contain any other resource types. Remove all existing resources from an existing subnet prior to 
+  # deploying container groups to it, or create a new subnet. 
+  # For additional details als limitations please see https://docs.microsoft.com/nl-nl/azure/container-instances/container-instances-vnet
+  vnetName: '<VNET NAME>'
+  subnetName: '<SUBNET NAME>'
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# =-=                                               DON't CHANGE ANYTHING BELOW THIS LINE!!                                                     =-=
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+steps:
+# This taks will run a Powershell script to retrieve the credentials for ACR and PAT for Azure DevOps.
+- task: AzureKeyVault@1
+  displayName: 'Get secrets from Key Vault'
+  inputs:
+    azureSubscription: $(azureSubscription)
+    KeyVaultName: $(keyVaultName)
+    SecretsFilter: 'RegistryPassword1, RegistryPassword2, patTokenManageAgent'
+
+# This task will perform a Docker build and Docker push.
+# The container image will be build the container image based on the 'containerRepository' value supplied above and pushes it towards ACR.
+- task: PowerShell@2
+  displayName: 'Build and Push Docker image'
+  inputs:
+    targetType: 'inline'
+    script: |
+      docker login $(registryLoginServer) --username $(registryUsername) --password $(RegistryPassword1) 
+      docker build $(containerRepository) -t $(registryImageUri)
+      docker images
+      docker push $(registryImageUri)
+
+# Lastly the Azure Container Instance will be deployed. All parameters are overriden except one!
+# Since we don't want to insert and pass on the Azure Key Vault secrets in this task, you need to modify 
+# the paramters JSON and correct the two Azure Key Vault references inside.
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: 'Deploy Container'
+  inputs:
+    deploymentScope: 'Resource Group'
+    ConnectedServiceName: 'DevOpsTeam-App-S'
+    subscriptionName: '7b1ba02e-bac6-4c45-83a0-7f0d3104922e'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: $(resourceGroupName)
+    location: 'West Europe'
+    templateLocation: 'Linked artifact'
+    csmFile: 'adsha-ubuntulinux-vnetintegration/ACI_DevOps_Agent_VNet_template.json'
+    csmParametersFile: 'adsha-ubuntulinux-vnetintegration/ACI_DevOps_Agent_VNet_parameters.json'
+    overrideParameters: '-containerInstanceName $(containerInstanceName) -azdUrl $(azdUrl) -patToken $(patTokenManageAgent) -agentPool $(agentPool) -registryLoginServer $(registryLoginServer) -registryImageUri $(registryImageUri) -registryUserName $(registryUsername) -registryPassword $(RegistryPassword1) -vnetName $(vnetName) -subnetName $(subnetName)'
+    deploymentMode: 'Incremental'
+

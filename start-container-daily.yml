@@ -1,0 +1,34 @@
+trigger: none
+
+schedules:
+- cron: "0 8 * * Mon-Fri"
+  displayName: Start Self-Hosted Agent Container
+  branches:
+    include:
+    - master
+  always: true
+
+pool: "Hosted VS2017"
+
+# Only change and fill in the parameters below:
+variables:
+  azureSubscription: '<NAME OF AZURE DEVOPS SERVICE ENDPOINT FOR AZURE DEPLOYMENT>'
+  ResourceGroupName: '<RESOURCE GROUP TO DEPLOY TO>'
+  ResourceName: 'linuxagent'
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# =-=                                               DON't CHANGE ANYTHING BELOW THIS LINE!!                                                     =-=
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+steps:
+# This taks will run a Powershell script to START the Azure Container Instance.
+- task: AzurePowerShell@4
+  inputs:
+    azureSubscription: $(azureSubscription)
+    ScriptType: 'FilePath'
+    ScriptPath: 'powershell-scripts/StartContainer.ps1'
+    ScriptArguments: '-ResourceGroupName $(ResourceGroupName) -ResourceName $(ResourceName)'
+    azurePowerShellVersion: 'LatestVersion'
+
+
+
