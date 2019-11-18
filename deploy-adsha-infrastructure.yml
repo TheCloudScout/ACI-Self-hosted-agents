@@ -1,0 +1,59 @@
+trigger: none
+
+# We need to rely on a hosted agent from Microsoft.
+# And specifically a Windows agent because we'l be relying of passing on environment variables to Powershell.
+pool: 'Hosted VS2017'
+
+variables:
+  KeyVaultName: 'keyvault-btoitops-adsha'
+
+jobs:
+- job: DeployInfra
+  steps:
+
+# Deploy Azure Key Vault
+  - task: AzureResourceManagerTemplateDeployment@3
+    displayName: 'Azure Deployment: Key Vault'
+    inputs:
+      deploymentScope: 'Resource Group'
+      ConnectedServiceName: 'DevOpsTeam-App-S'
+      subscriptionName: '7b1ba02e-bac6-4c45-83a0-7f0d3104922e'
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: 'rg-devopsteam-app-sb-401'
+      location: 'West Europe'
+      templateLocation: 'Linked artifact'
+      csmFile: 'key-vault/key-vault-template.json'
+      csmParametersFile: 'key-vault/key-vault-parameters.json'
+      overrideParameters: '-name $(KeyVaultName)'
+      deploymentMode: 'Incremental'
+
+# Deploy Azure Container Registry
+  - task: AzureResourceGroupDeployment@2
+    displayName: 'Azure Deployment: Container Registry'
+    inputs:
+      azureSubscription: 'DevOpsTeam-App-S'
+      action: 'Create Or Update Resource Group'
+      resourceGroupName: 'rg-devopsteam-app-sb-401'
+      location: 'West Europe'
+      templateLocation: 'Linked artifact'
+      csmFile: 'container-registry/container-registry-template.json'
+      csmParametersFile: 'container-registry/container-registry-parameters.json'
+      deploymentMode: 'Incremental'
+
+# Store Azure Container Registry credentials in Azure Key Vault
+  - task: AzurePowerShell@4
+    displayName: 'Azure Deployment: Store registry credentials in Key Vault'
+    inputs:
+      azureSubscription: 'DevOpsTeam-App-S'
+      ScriptType: 'FilePath'
+      ScriptPath: 'powershell-scripts/ContainerRegistryKeyVaultPasswords.ps1'
+      ScriptArguments: '-KeyVaultName $(KeyVaultName)'
+      azurePowerShellVersion: 'LatestVersion'
+
+# What to do afterwards:
+#
+# * Generate Azure DevOps PAT token with the folowwing permissions: Agent Pools (Read & Manage), Deployment Groups (Read & Manage)
+# * Store PAT token in Azure Key Vault
+# * Create an agent pool in Azure DevOps to put your self-hosted agent container inside
+# * Remember the name of your deployed Azure Container Registry and Azure Key Vault. You'll need to fill these paramters in the next pipeline!
+# * Also make sure to change the parameters files for corresponding ARM templates so that subscription Id's and Key Vault references match up!
