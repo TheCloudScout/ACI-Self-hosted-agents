@@ -13,4 +13,5 @@ Running your Azure DevOps self-hosted agent in a Azure Container Instance. Conta
 9.  Alter the ARM template parameters file so that the Key Vault references matches up. 
 10. Run the "container" pipeline for the first time.
 
-For more information see the blog article I've wrote about this.
+For more information see the blog article I've wrote about this:
+https://medium.com/@koosg/build-your-own-azure-devops-agents-with-pipelines-95104be095d5
