@@ -1,16 +1,14 @@
 trigger: none
 
 # We need to rely on a hosted agent from Microsoft.
-# And specifically a Windows agent because we'l be relying of passing on environment variables to Powershell.
+# And specifically a Windows agent because we'll be relying on passing on environment variables to Powershell.
 pool: 'Hosted VS2017'
 
-# Only change and fill in the parameters below:
 variables:
-  KeyVaultName: '<KEY VAULT NAME>'
-  AzureDevOpsServiceEndpoint: '<NAME OF AZURE DEVOPS SERVICE ENDPOINT FOR AZURE DEPLOYMENT>'
-  subscriptionId: '<SUBSCRIPTION ID>'
-  resourceGroupName: '<RESOURCE GROUP TO DEPLOY TO>'
-  location: '<AZURE REGION>'
+  ResourceGroup: 'rg-tyrell-app-001'
+  ServiceConnection: 'Tyrell-MSDN'
+  KeyVaultName: 'kv-tyrell-app-001'
+  acrName: 'acrtyrellapp001' # may contain alpha numeric characters only and must be between 5 and 50 characters
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # =-=                                               DON't CHANGE ANYTHING BELOW THIS LINE!!                                                     =-=
@@ -21,15 +19,13 @@ jobs:
   steps:
 
 # Deploy Azure Key Vault
-  - task: AzureResourceManagerTemplateDeployment@3
+  - task: AzureResourceGroupDeployment@2
     displayName: 'Azure Deployment: Key Vault'
     inputs:
-      deploymentScope: 'Resource Group'
-      ConnectedServiceName: $(AzureDevOpsServiceEndpoint)
-      subscriptionName: $(subscriptionId)
+      azureSubscription: $(ServiceConnection)
       action: 'Create Or Update Resource Group'
-      resourceGroupName: $(resourceGroupName)
-      location: $(location)
+      resourceGroupName: '$(ResourceGroup)'
+      location: 'West Europe'
       templateLocation: 'Linked artifact'
       csmFile: 'key-vault/key-vault-template.json'
       csmParametersFile: 'key-vault/key-vault-parameters.json'
@@ -40,29 +36,21 @@ jobs:
   - task: AzureResourceGroupDeployment@2
     displayName: 'Azure Deployment: Container Registry'
     inputs:
-      azureSubscription: $(AzureDevOpsServiceEndpoint)
+      azureSubscription: $(ServiceConnection)
       action: 'Create Or Update Resource Group'
-      resourceGroupName: $(resourceGroupName)
-      location: $(location)
+      resourceGroupName: $(ResourceGroup)
+      location: 'West Europe'
       templateLocation: 'Linked artifact'
       csmFile: 'container-registry/container-registry-template.json'
       csmParametersFile: 'container-registry/container-registry-parameters.json'
+      overrideParameters: '-acrName $(ACRName)'
       deploymentMode: 'Incremental'
 
 # Store Azure Container Registry credentials in Azure Key Vault
   - task: AzurePowerShell@4
     displayName: 'Azure Deployment: Store registry credentials in Key Vault'
     inputs:
-      azureSubscription: $(AzureDevOpsServiceEndpoint)
+      azureSubscription: $(ServiceConnection)
       ScriptType: 'FilePath'
       ScriptPath: 'powershell-scripts/ContainerRegistryKeyVaultPasswords.ps1'
-      ScriptArguments: '-KeyVaultName $(KeyVaultName)'
       azurePowerShellVersion: 'LatestVersion'
-
-# What to do afterwards:
-#
-# * Generate Azure DevOps PAT token with the folowwing permissions: Agent Pools (Read & Manage), Deployment Groups (Read & Manage)
-# * Store PAT token in Azure Key Vault
-# * Create an agent pool in Azure DevOps to put your self-hosted agent container inside
-# * Remember the name of your deployed Azure Container Registry and Azure Key Vault. You'll need to fill these paramters in the next pipeline!
-# * Also make sure to change the parameters files for corresponding ARM templates so that subscription Id's and Key Vault references match up!

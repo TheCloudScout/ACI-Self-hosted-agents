@@ -1,4 +1,4 @@
-$RegistryCredentials =  Get-AzContainerRegistry | Get-AzContainerRegistryCredential
+$RegistryCredentials =  Get-AzContainerRegistry -ResourceGroupName $ENV:ResourceGroup -Name $ENV:acrName | Get-AzContainerRegistryCredential
 
 $RegistryPw1 = ConvertTo-SecureString -string $RegistryCredentials.Password -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName $ENV:KeyVaultName -Name "RegistryPassword1" -SecretValue $RegistryPw1

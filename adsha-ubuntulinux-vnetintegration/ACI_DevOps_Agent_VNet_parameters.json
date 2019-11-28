@@ -3,24 +3,19 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "containerInstanceName": {
-      "value": "vstsagent"
+      "value": ""
     },
     "containerCount": {
       "value": 1
     },
     "azdUrl": {
-      "value": "https://dev.azure.com/<ORGANIZATION NAME>/"
+      "value": ""
     },
     "patToken": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
-        },
-        "secretName": "AzureDevOps-PATtoken"
-      }
+      "value": ""
     },
     "agentPool": {
-      "value": "Self-hosted-ACI-Linux-dotNet"
+      "value": ""
     },
     "agentNamePrefix": {
       "value": "aci-agent-linux-dotnet-"
@@ -32,20 +27,10 @@
       "value": ""
     },
     "registryUserName": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
-        },
-        "secretName": "ACR-username"
-      }
+      "value": ""
     },
     "registryPassword": {
-      "reference": {
-        "keyVault": {
-          "id": "/subscriptions/<SUBSCRIPTION ID>/resourceGroups/<RESOURCE GROUP>/providers/Microsoft.KeyVault/vaults/<KEY VAULT NAME>"
-        },
-        "secretName": "ACR-password"
-      }
+      "value": ""
     },
     "osType": {
       "value": "Linux"
@@ -57,7 +42,7 @@
       "value": "<SUBNET NAME>"
     },
     "networkProfileName": {
-      "value": "aci-networkProfile"
+      "value": "networkprofilename"
     }
   }
 }

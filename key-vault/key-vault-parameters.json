@@ -3,7 +3,7 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "name": {
-            "value": ""
+            "value": "Key Vault Name"
         },
         "sku": {
             "value": "Standard"
@@ -11,8 +11,8 @@
         "accessPolicies": {
             "value": [
                 {
-                    "tenantId": "<YOUR TENANT ID",
-                    "objectId": "<OBJECT ID OF APP REGISTRATION USED BY AZURE DEVOPS>",
+                    "tenantId": "11052a35-7f0f-4891-88bb-a4059564c934",
+                    "objectId": "6615c592-5e1f-4d16-8fa5-1235c49ba934",
                     "permissions": {
                         "keys": [
                             "Get",
@@ -36,9 +36,9 @@
                         ]
                     }
                 },
-                {
-                    "tenantId": "<YOUR TENANT ID>",
-                    "objectId": "<OBJECT ID FROM AN ADDITIONAL USER OF GROUP WHO SHOULD HAVE ACCESS TO THIS KEY VAULT>",
+                                {
+                    "tenantId": "11052a35-7f0f-4891-88bb-a4059564c934",
+                    "objectId": "fd9680df-7584-46f0-830d-65ef2942a32a",
                     "permissions": {
                         "keys": [
                             "Get",
@@ -65,7 +65,7 @@
             ]
         },
         "tenant": {
-            "value": "<AZURE AD TENANT ID>"
+            "value": "11052a35-7f0f-4891-88bb-a4059564c934"
         },
         "enabledForDeployment": {
             "value": false

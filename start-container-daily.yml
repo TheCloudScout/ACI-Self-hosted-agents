@@ -1,34 +1,29 @@
 trigger: none
 
 schedules:
-- cron: "0 8 * * Mon-Fri"
-  displayName: Start Self-Hosted Agent Container
+- cron: "0 8 * * Mon-Fri" # First number represent the amount of minutes, second represent the hours. In this case 08:00 Monday - Friday
+  displayName: Stop Self Hosted Agent Container
   branches:
-    include:
+    include: 
     - master
   always: true
 
 pool: "Hosted VS2017"
 
-# Only change and fill in the parameters below:
 variables:
-  azureSubscription: '<NAME OF AZURE DEVOPS SERVICE ENDPOINT FOR AZURE DEPLOYMENT>'
-  ResourceGroupName: '<RESOURCE GROUP TO DEPLOY TO>'
-  ResourceName: 'linuxagent'
+  ResourceGroupName: 'rg-tyrell-app-001'
+  ACIname: 'aci-tyrell-app-001'
+  ServiceConnection: 'Tyrell-MSDN'
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 # =-=                                               DON't CHANGE ANYTHING BELOW THIS LINE!!                                                     =-=
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 steps:
-# This taks will run a Powershell script to START the Azure Container Instance.
 - task: AzurePowerShell@4
   inputs:
-    azureSubscription: $(azureSubscription)
+    azureSubscription: $(ServiceConnection)
     ScriptType: 'FilePath'
     ScriptPath: 'powershell-scripts/StartContainer.ps1'
-    ScriptArguments: '-ResourceGroupName $(ResourceGroupName) -ResourceName $(ResourceName)'
+    ScriptArguments: '-ResourceGroupName $(ResourceGroupName) -ResourceName $(ACIname)'
     azurePowerShellVersion: 'LatestVersion'
-
-
-
